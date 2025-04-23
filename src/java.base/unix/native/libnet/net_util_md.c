@@ -50,6 +50,23 @@
 #define IPV6_FLOWINFO_SEND      33
 #endif
 
+#ifdef HAIKU
+#define DONT_ENABLE_IPV6 1
+#endif
+/*
+#define RESTARTABLE(_cmd, _result) do { \
+    do { \
+        _result = _cmd; \
+    } while((_result == -1) && (errno == EINTR)); \
+} while(0)
+
+int NET_SocketAvailable(int s, int *pbytes) {
+    int result;
+    RESTARTABLE(ioctl(s, FIONREAD, pbytes), result);
+    return result;
+}
+*/
+
 void
 NET_ThrowByNameWithLastError(JNIEnv *env, const char *name,
                    const char *defaultDetail) {

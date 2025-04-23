@@ -33,7 +33,6 @@ import java.util.Locale;
  * Supported OperatingSystem and Architecture.
  */
 public record Platform(OperatingSystem os, Architecture arch) {
-
     /*
      * Returns the {@code Platform} based on the platformString of the form <operating system>-<arch>.
      * @throws IllegalArgumentException if the delimiter is missing or either OS or

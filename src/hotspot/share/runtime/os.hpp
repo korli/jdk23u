@@ -663,6 +663,8 @@ class os: AllStatic {
   static char* native_path(char *path);
   static int ftruncate(int fd, jlong length);
   static int get_fileno(FILE* fp);
+  static int fsync(int fd);
+  static int available(int fd, jlong *bytes);
   static void flockfile(FILE* fp);
   static void funlockfile(FILE* fp);
 
@@ -987,8 +989,10 @@ class os: AllStatic {
   static const char* line_separator();
   static const char* path_separator();
 
+#ifndef __HAIKU__
   // Information about the protection of the page at address '0' on this os.
   inline static bool zero_page_read_protected();
+#endif
 
   static void setup_fpu();
   static juint cpu_microcode_revision();
@@ -999,24 +1003,13 @@ class os: AllStatic {
   // Note: Currently only used in 64 bit Windows implementations
   inline static bool register_code_area(char *low, char *high);
 
-  // Platform-specific code for interacting with individual OSes.
-  // TODO: This is for compatibility only with current usage of os::Linux, etc.
-  // We can get rid of the following block if we rename such a class to something
-  // like ::LinuxUtils
-#if defined(AIX)
-  class Aix;
-#elif defined(BSD)
-  class Bsd;
-#elif defined(LINUX)
-  class Linux;
-#elif defined(_WINDOWS)
-  class win32;
-#endif
-
-  // Ditto - Posix-specific API. Ideally should be moved to something like ::PosixUtils.
+  // Platform dependent stuff
 #ifndef _WINDOWS
-  class Posix;
+# include "os_posix.hpp"
 #endif
+#include OS_CPU_HEADER(os)
+#include OS_HEADER(os)
+
 
   // FIXME - some random stuff that was in os_windows.hpp
 #ifdef _WINDOWS

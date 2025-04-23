@@ -1041,6 +1041,30 @@ void os::print_dhm(outputStream* st, const char* startStr, long sec) {
   st->print_cr("%s %ld days %ld:%02ld hours", startStr, days, hours, minutes);
 }
 
+#ifndef __HAIKU__
+
+void os::print_tos_pc(outputStream* st, const void* context) {
+  if (context == nullptr) return;
+
+  // First of all, carefully determine sp without inspecting memory near pc.
+  // See comment below.
+  intptr_t* sp = nullptr;
+  fetch_frame_from_context(context, &sp, nullptr);
+  print_tos(st, (address)sp);
+  st->cr();
+
+  // Note: it may be unsafe to inspect memory near pc. For example, pc may
+  // point to garbage if entry point in an nmethod is corrupted. Leave
+  // this at the end, and hope for the best.
+  // This version of fetch_frame_from_context finds the caller pc if the actual
+  // one is bad.
+  address pc = fetch_frame_from_context(context).pc();
+  print_instructions(st, pc);
+  st->cr();
+}
+
+#endif // __HAIKU__
+
 void os::print_tos(outputStream* st, address sp) {
   st->print_cr("Top of Stack: (sp=" PTR_FORMAT ")", p2i(sp));
   print_hex_dump(st, sp, sp + 512, sizeof(intptr_t));
@@ -1068,10 +1092,12 @@ void os::print_environment_variables(outputStream* st, const char** env_list) {
   }
 }
 
+#ifndef __HAIKU__
 void os::print_register_info(outputStream* st, const void* context) {
   int continuation = 0;
   print_register_info(st, context, continuation);
 }
+#endif
 
 void os::print_cpu_info(outputStream* st, char* buf, size_t buflen) {
   // cpu
@@ -1571,6 +1597,7 @@ size_t os::page_size_for_region_unaligned(size_t region_size, size_t min_pages) 
 #define MAX_PATH    (2 * K)
 #endif
 
+#ifndef __HAIKU__
 void os::pause() {
   char filename[MAX_PATH];
   if (PauseAtStartupFile && PauseAtStartupFile[0]) {
@@ -1595,6 +1622,7 @@ void os::pause() {
                 "Could not open pause file '%s', continuing immediately.\n", filename);
   }
 }
+#endif // __HAIKU__
 
 static const char* errno_to_string (int e, bool short_text) {
   #define ALL_SHARED_ENUMS(X) \
@@ -1721,12 +1749,14 @@ const char* os::errno_name(int e) {
   return errno_to_string(e, true);
 }
 
+#ifndef __HAIKU__
 // create binary file, rewriting existing file if required
 int os::create_binary_file(const char* path, bool rewrite_existing) {
   int oflags = O_WRONLY | O_CREAT WINDOWS_ONLY(| O_BINARY);
   oflags |= rewrite_existing ? O_TRUNC : O_EXCL;
   return ::open(path, oflags, S_IREAD | S_IWRITE);
 }
+#endif // __HAIKU__
 
 #define trace_page_size_params(size) byte_size_in_exact_unit(size), exact_unit_for_byte_size(size)
 

@@ -97,15 +97,23 @@ final class ProcessImpl extends Process {
     private static LaunchMechanism launchMechanism() {
         String s = GetPropertyAction.privilegedGetProperty("jdk.lang.Process.launchMechanism");
         if (s == null) {
-            return LaunchMechanism.POSIX_SPAWN;
+            // Force FORK when is HAIKU
+            if (OperatingSystem.isHaiku())
+                return LaunchMechanism.FORK;
+            else
+                return LaunchMechanism.POSIX_SPAWN;
         }
 
         try {
             // Should be value of a LaunchMechanism enum
             LaunchMechanism lm = LaunchMechanism.valueOf(s.toUpperCase(Locale.ROOT));
             switch (OperatingSystem.current()) {
+                case HAIKU:
+                    if (lm != LaunchMechanism.POSIX_SPAWN) {
+                        return lm; // POSIX_SPAWN isn't supported on HAIKU
+                    }
+                    break;
                 case LINUX:
-                    return lm;      // All options are valid for Linux
                 case AIX:
                 case MACOS:
                     if (lm != LaunchMechanism.VFORK) {
@@ -328,7 +336,7 @@ final class ProcessImpl extends Process {
     void initStreams(int[] fds, boolean forceNullOutputStream) throws IOException {
         switch (OperatingSystem.current()) {
             case LINUX:
-            case MACOS:
+            case HAIKU:
                 stdin = (fds[0] == -1) ?
                         ProcessBuilder.NullOutputStream.INSTANCE :
                         new ProcessPipeOutputStream(fds[0]);
@@ -462,6 +470,7 @@ final class ProcessImpl extends Process {
             case LINUX:
             case MACOS:
             case AIX:
+            case HAIKU:
                 // There is a risk that pid will be recycled, causing us to
                 // kill the wrong process!  So we only terminate processes
                 // that appear to still be running.  Even with this check,

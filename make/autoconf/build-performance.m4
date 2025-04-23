@@ -37,7 +37,14 @@ AC_DEFUN([BPERF_CHECK_CORES],
     # Looks like a MacOSX system
     NUM_CORES=`/usr/sbin/sysctl -n hw.ncpu`
   elif test "x$OPENJDK_BUILD_OS" = xaix ; then
-    NUM_CORES=`lparstat -m 2> /dev/null | $GREP -o "lcpu=[[0-9]]*" | $CUT -d "=" -f 2`
+    NUM_LCPU=`lparstat -m 2> /dev/null | $GREP -o "lcpu=[[0-9]]*" | $CUT -d "=" -f 2`
+    if test -n "$NUM_LCPU"; then
+      NUM_CORES=$NUM_LCPU
+      FOUND_CORES=yes
+    fi
+  elif test "x$OPENJDK_BUILD_OS" = xhaiku; then
+    NUM_CORES=`sysinfo -cpu | grep "CPU" | wc -l`
+    FOUND_CORES=yes
   elif test -n "$NUMBER_OF_PROCESSORS"; then
     # On windows, look in the env
     NUM_CORES=$NUMBER_OF_PROCESSORS
@@ -71,6 +78,10 @@ AC_DEFUN([BPERF_CHECK_MEMORY_SIZE],
   elif test -x /usr/sbin/sysctl; then
     # Looks like a MacOSX system
     MEMORY_SIZE=`/usr/sbin/sysctl -n hw.memsize`
+    MEMORY_SIZE=`expr $MEMORY_SIZE / 1024 / 1024`
+    FOUND_MEM=yes
+  elif test "x$OPENJDK_BUILD_OS" = xhaiku; then
+    MEMORY_SIZE=`sysinfo -mem | grep max | awk '{print int([$]7)}'`
     MEMORY_SIZE=`expr $MEMORY_SIZE / 1024 / 1024`
     FOUND_MEM=yes
   elif test "x$OPENJDK_BUILD_OS" = xwindows; then
