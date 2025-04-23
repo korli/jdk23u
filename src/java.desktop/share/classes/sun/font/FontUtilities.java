@@ -33,7 +33,6 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import javax.swing.plaf.FontUIResource;
 
-import sun.awt.OSInfo;
 import sun.util.logging.PlatformLogger;
 
 /**
@@ -45,6 +44,8 @@ public final class FontUtilities {
 
     public static boolean isMacOSX;
     public static boolean isMacOSX14;
+
+    public static boolean isHaiku;
 
     public static boolean useJDKScaler;
 
@@ -65,10 +66,13 @@ public final class FontUtilities {
             @SuppressWarnings("deprecation") // PlatformLogger.setLevel is deprecated.
             @Override
             public Object run() {
+                String osName = System.getProperty("os.name", "unknownOS");
 
-                isLinux = OSInfo.getOSType() == OSInfo.OSType.LINUX;
+                isLinux = osName.startsWith("Linux");
 
-                isMacOSX = OSInfo.getOSType() == OSInfo.OSType.MACOSX;
+                isHaiku = osName.startsWith("Haiku");
+
+                isMacOSX = osName.contains("OS X"); // TODO: MacOSX
                 if (isMacOSX) {
                     // os.version has values like 10.13.6, 10.14.6
                     // If it is not positively recognised as 10.13 or less,
@@ -100,7 +104,7 @@ public final class FontUtilities {
                 } else {
                     useJDKScaler = false;
                 }
-                isWindows = OSInfo.getOSType() == OSInfo.OSType.WINDOWS;
+                isWindows = osName.startsWith("Windows");
                 String debugLevel =
                     System.getProperty("sun.java2d.debugfonts");
 

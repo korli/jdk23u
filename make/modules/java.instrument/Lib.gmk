@@ -29,17 +29,25 @@ include LibCommon.gmk
 ## Build libinstrument
 ################################################################################
 
+ifeq ($(call isTargetOs, haiku), true)
+    haiku_JLI_LIB := -ljli
+endif
+
 # equivalent of strcasecmp is stricmp on Windows
 $(eval $(call SetupJdkLibrary, BUILD_LIBINSTRUMENT, \
     NAME := instrument, \
     OPTIMIZATION := LOW, \
+    CFLAGS_haiku := $(ICONV_CFLAGS), \
     CFLAGS_windows := -Dstrcasecmp=stricmp, \
     CFLAGS_debug := -DJPLIS_LOGGING, \
     CFLAGS_release := -DNO_JPLIS_LOGGING, \
     JDK_LIBS := java.base:libjava java.base:libjli java.base:libjvm, \
     LIBS_unix := $(LIBZ_LIBS), \
     LIBS_linux := $(LIBDL), \
+    LIBS_haiku := -liconv -ljli, \
     LIBS_aix := $(LIBDL) -liconv, \
+    LDFLAGS_haiku := -L$(SUPPORT_OUTPUTDIR)/native/java.base \
+        $(ICONV_LDFLAGS), \
     LIBS_macosx := -liconv \
         -framework ApplicationServices \
         -framework Cocoa \

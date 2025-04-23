@@ -136,18 +136,24 @@ define SetupBuildLauncherBody
       CFLAGS_windows := $$($1_CFLAGS_windows), \
       EXTRA_HEADER_DIRS := java.base:libjvm, \
       DISABLED_WARNINGS_gcc := unused-function, \
-      LDFLAGS := $$($1_LDFLAGS), \
-      LDFLAGS_linux := $$(call SET_EXECUTABLE_ORIGIN,/../lib), \
-      LDFLAGS_macosx := $$(call SET_EXECUTABLE_ORIGIN,/../lib), \
-      JDK_LIBS := java.base:libjli, \
-      JDK_LIBS_windows := java.base:libjava, \
-      LIBS := $$($1_LIBS), \
-      LIBS_unix := $(LIBZ_LIBS), \
-      LIBS_linux := $(LIBDL) -lpthread, \
-      LIBS_macosx := \
-          -framework ApplicationServices \
-          -framework Cocoa \
-          -framework Security, \
+      LDFLAGS := $$(LDFLAGS_JDKEXE) \
+          $$(call SET_EXECUTABLE_ORIGIN) \
+          $$($1_LDFLAGS), \
+      LDFLAGS_linux := $$(call SET_EXECUTABLE_ORIGIN,/../lib) \
+          -L$(call FindLibDirForModule, java.base), \
+      LDFLAGS_macosx := $$(call SET_EXECUTABLE_ORIGIN,/../lib) \
+          -L$(call FindLibDirForModule, java.base), \
+      LDFLAGS_haiku := $$(call SET_EXECUTABLE_ORIGIN,/../lib) \
+          -L$(call FindLibDirForModule, java.base), \
+       LDFLAGS_aix := -L$(SUPPORT_OUTPUTDIR)/native/java.base, \
+      LIBS := $(JDKEXE_LIBS) $$($1_LIBS), \
+      LIBS_linux := -ljli -lpthread $(LIBDL), \
+      LIBS_macosx := -ljli -framework Cocoa -framework Security \
+          -framework ApplicationServices, \
+      LIBS_aix := -ljli_static, \
+      LIBS_haiku := -ljli -lpthread , \
+      LIBS_windows := $$($1_WINDOWS_JLI_LIB) \
+          $(SUPPORT_OUTPUTDIR)/native/java.base/libjava/java.lib, \
       OUTPUT_DIR := $$($1_OUTPUT_DIR), \
       VERSIONINFO_RESOURCE := $$($1_VERSION_INFO_RESOURCE), \
       EXTRA_RCFLAGS := $$($1_EXTRA_RCFLAGS), \
